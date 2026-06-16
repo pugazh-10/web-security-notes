@@ -1,1 +1,403 @@
+# 🚀 OS Command Injection - Learning Journey & Notes
+
+![OS Command Injection Learning Journey](./os-command-injection-learning-journey.png)
+
+> A comprehensive study of OS Command Injection vulnerabilities, detection techniques, exploitation concepts, and mitigation strategies based on hands-on learning and lab practice.
+
+---
+
+# 📌 Overview
+
+OS Command Injection (also known as Shell Injection) is a vulnerability that occurs when an application passes user-controlled input to operating system commands without proper validation.
+
+An attacker can manipulate the command being executed and force the operating system to run unintended commands.
+
+In severe cases, this can lead to:
+
+* Information disclosure
+* Arbitrary command execution
+* Server compromise
+* Credential exposure
+* Data theft
+* Lateral movement
+* Full system takeover
+
+---
+
+# 🎯 Learning Objectives
+
+During this learning journey, I focused on:
+
+* Understanding how OS command injection occurs
+* Learning shell metacharacters
+* Identifying command separators
+* Detecting blind command injection vulnerabilities
+* Understanding OAST techniques
+* Learning data exfiltration methods
+* Exploring secure coding practices
+* Understanding mitigation strategies
+
+---
+
+# 🔍 What is OS Command Injection?
+
+A vulnerable application constructs a command using user input.
+
+Example:
+
+Expected command:
+
+stockreport.pl 381 29
+
+Attacker input modifies execution flow and introduces additional commands.
+
+Instead of executing only the intended command, the application executes attacker-controlled instructions.
+
+---
+
+# ⚙️ How Command Injection Happens
+
+Typical flow:
+
+User Input
+↓
+Application
+↓
+Shell Command Construction
+↓
+Operating System
+↓
+Command Execution
+
+If user input is not validated properly, special shell characters can alter command behavior.
+
+---
+
+# 🧩 Useful Enumeration Commands
+
+## Linux
+
+| Purpose               | Command     |
+| --------------------- | ----------- |
+| Current User          | whoami      |
+| Operating System      | uname -a    |
+| Network Configuration | ifconfig    |
+| Active Connections    | netstat -an |
+| Running Processes     | ps -ef      |
+
+---
+
+## Windows
+
+| Purpose               | Command       |
+| --------------------- | ------------- |
+| Current User          | whoami        |
+| Operating System      | ver           |
+| Network Configuration | ipconfig /all |
+| Active Connections    | netstat -an   |
+| Running Processes     | tasklist      |
+
+---
+
+# 🛠 Shell Metacharacters
+
+## Cross Platform Operators
+
+| Operator | Purpose                                  |
+| -------- | ---------------------------------------- |
+| &        | Command separator                        |
+| &&       | Execute second command if first succeeds |
+| |        | Pipe output                              |
+| ||       | Execute second command if first fails    |
+
+---
+
+## Unix-Specific Operators
+
+| Operator | Purpose              |
+| -------- | -------------------- |
+| ;        | Sequential execution |
+| Newline  | Command separator    |
+
+---
+
+# 🔄 Command Substitution
+
+## Backticks
+
+Used to execute a command and insert its output.
+
+Example:
+
+echo `whoami`
+
+---
+
+## Dollar Syntax
+
+Example:
+
+echo $(whoami)
+
+Modern alternative to backticks.
+
+---
+
+# 🔓 Breaking Out of Quotes
+
+Sometimes user input is placed inside quotes.
+
+Example:
+
+"USER_INPUT"
+
+or
+
+'USER_INPUT'
+
+In such situations, understanding command context becomes critical because attackers may attempt to terminate the quoted string before introducing shell operators.
+
+---
+
+# 👀 In-Band Command Injection
+
+The easiest form of command injection.
+
+Characteristics:
+
+* Command output is visible
+* Response contains execution results
+* Easy to verify
+
+Example concept:
+
+User Input
+↓
+Command Executes
+↓
+Output Returned
+↓
+Attacker Sees Result
+
+---
+
+# ⏱ Blind Command Injection
+
+Blind command injection occurs when commands execute successfully but their output is not displayed to the user.
+
+Characteristics:
+
+* No visible command output
+* Requires indirect verification techniques
+
+---
+
+# ⌛ Time-Based Detection
+
+One of the most common blind injection techniques.
+
+Concept:
+
+1. Trigger a delay.
+2. Measure response time.
+3. Infer command execution.
+
+Observation:
+
+Normal Response:
+≈ 1 second
+
+Injected Response:
+≈ 10+ seconds
+
+If the response consistently slows down after introducing a delay command, this strongly indicates command execution.
+
+---
+
+# 📁 Output Redirection
+
+When output is hidden, attackers may attempt to redirect command results into a file.
+
+Concept:
+
+Command Output
+↓
+File
+↓
+Web Server
+↓
+Attacker Access
+
+This allows retrieval of command results through an alternate channel.
+
+---
+
+# 🌐 Out-of-Band (OAST) Detection
+
+OAST stands for:
+
+Out-Of-Band Application Security Testing
+
+Instead of relying on application responses, attackers observe external interactions generated by the target system.
+
+Benefits:
+
+* Works even when output is hidden
+* Useful in blind command injection
+* High confidence verification method
+
+---
+
+# 📡 DNS-Based Verification
+
+The target system performs a DNS lookup to an attacker-controlled domain.
+
+Observation of the lookup confirms command execution.
+
+Workflow:
+
+Injected Command
+↓
+DNS Request Generated
+↓
+Attacker-Controlled Infrastructure Receives Request
+↓
+Injection Confirmed
+
+---
+
+# 📤 Out-of-Band Data Exfiltration
+
+A more advanced technique.
+
+Instead of only confirming execution, information can be embedded into outbound DNS requests.
+
+Workflow:
+
+Command Executes
+↓
+Output Captured
+↓
+Output Embedded Into DNS Query
+↓
+DNS Request Sent
+↓
+Attacker Receives Data
+
+This demonstrates how attackers can retrieve information even when applications reveal nothing directly.
+
+---
+
+# 🚨 Common Testing Mindset
+
+When assessing command injection:
+
+1. Understand where input is used.
+2. Identify shell context.
+3. Test separators.
+4. Observe responses.
+5. Look for side channels.
+6. Validate assumptions.
+7. Refine payloads carefully.
+
+The goal is understanding application behavior rather than memorizing payloads.
+
+---
+
+# 🛡 Prevention Strategies
+
+## Best Practice
+
+Avoid shell command execution whenever possible.
+
+Use platform APIs instead.
+
+---
+
+## Input Validation
+
+Recommended approaches:
+
+✅ Allowlist validation
+
+✅ Numeric validation
+
+✅ Type validation
+
+✅ Alphanumeric-only restrictions
+
+✅ Strict input length controls
+
+---
+
+## Principle of Least Privilege
+
+Applications should run with the minimum permissions required.
+
+This reduces impact even if a vulnerability exists.
+
+---
+
+## Avoid Blacklists
+
+Attempting to block individual shell characters is generally unreliable.
+
+Modern security practices favor:
+
+* Positive validation
+* Allowlists
+* Safe APIs
+* Secure design
+
+---
+
+# 🧠 Key Takeaways
+
+* OS Command Injection remains a critical vulnerability class.
+* Understanding shell behavior is essential.
+* Blind vulnerabilities can still be exploited.
+* OAST techniques are powerful verification mechanisms.
+* Context matters more than payload memorization.
+* Strong validation and safe APIs are the best defenses.
+* Security testing is about understanding systems, not just finding bugs.
+
+---
+
+# 📚 Learning Resources
+
+* PortSwigger Web Security Academy
+* OWASP Web Security Testing Guide
+* OWASP Top 10
+* Secure Coding Guidelines
+* Application Security Research Papers
+
+---
+
+## 🚀 Learning Progress
+
+✔ OS Command Injection Fundamentals
+
+✔ Shell Metacharacters
+
+✔ Blind Command Injection
+
+✔ Time-Based Detection
+
+✔ File Output Redirection
+
+✔ OAST Techniques
+
+✔ DNS-Based Verification
+
+✔ Data Exfiltration Concepts
+
+✔ Mitigation & Secure Coding
+
+---
+
+**Author:** Pugazh
+
+**Topic:** Web Security Learning Journey
+
+**Focus Area:** OS Command Injection
 
